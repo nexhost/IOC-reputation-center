@@ -84,4 +84,5 @@ Los reportes generados se guardan localmente en `reports/`.
 ## Desarrollador
 
 Kendry Rosario  
+Lic. en Tecnologia de la Informacion con maestria en Ciberseguridad  
 kendry.rosario@gmail.com

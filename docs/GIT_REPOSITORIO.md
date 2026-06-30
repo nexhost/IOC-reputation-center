@@ -59,4 +59,5 @@ git push -u origin main
 IOC Reputation Center fue desarrollado por:
 
 Kendry Rosario  
+Lic. en Tecnologia de la Informacion con maestria en Ciberseguridad  
 kendry.rosario@gmail.com

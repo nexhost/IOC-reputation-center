@@ -7,7 +7,15 @@ IOC Reputation Center es una herramienta defensiva para equipos SOC. Permite con
 ## Desarrollador
 
 **Kendry Rosario**  
+Lic. en Tecnologia de la Informacion con maestria en Ciberseguridad  
 Contacto: **kendry.rosario@gmail.com**
+
+## Imagenes de apoyo
+
+![Dashboard](images/Screenshot1.png)
+![Historial de consultas](images/Screenshot2.png)
+![Reportes](images/Screenshot3.png)
+![Fuentes de inteligencia](images/Screenshot4.png)
 
 ## Fuentes de consulta IOC
 
