@@ -42,20 +42,31 @@
     </section>
 
     <section class="panel">
-        <h2>REPORTES GENERADOS</h2>
+        <div class="section-header">
+            <div>
+                <h2>REPORTES GENERADOS</h2>
+                <p>{{ pagination.total }} reportes encontrados.</p>
+            </div>
+        </div>
         <div class="case-list">
             {% for item in report_items %}
             <article class="case-item">
                 <div>
                     <strong>{{ item.filename }}</strong>
-                    <span>{{ item.report.created_at.strftime("%d/%m/%Y %H:%M") }}</span>
+                    <span>{{ item.created_at }}</span>
                 </div>
-                <a class="download-link" href="/reportes/descargar/{{ item.report.id }}">Descargar</a>
+                <div class="report-file-actions">
+                    <a class="download-link" href="/reportes/descargar/{{ item.report.id }}">Descargar</a>
+                    <form method="post" action="/reportes/eliminar/{{ item.report.id }}" onsubmit="return confirm('Eliminar este reporte generado?')">
+                        <button class="danger-action" type="submit">Eliminar</button>
+                    </form>
+                </div>
             </article>
             {% else %}
             <p class="muted">No hay reportes generados.</p>
             {% endfor %}
         </div>
+        {% include "partials/pagination.html" %}
     </section>
 </div>
 {% endblock %}
