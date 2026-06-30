@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set page_title = "Fuentes de Inteligencia" %}
+
+{% block content %}
+<section class="panel sources-compact-panel">
+    <div class="section-header">
+        <div>
+            <h2>CONSULTA IOC DESDE FUENTES</h2>
+            <p>Consulta centralizada contra las integraciones habilitadas.</p>
+        </div>
+        <span class="soft-badge">Threat Intelligence</span>
+    </div>
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    <form class="quick-search sources-search" method="post" action="/fuentes/consulta">
+        <input name="ioc_value" placeholder="IP, dominio, URL, MD5, SHA1 o SHA256" required>
+        <button type="submit"><i data-lucide="search"></i><span>Consultar</span></button>
+    </form>
+    {% if lookup_result %}
+    <div class="source-lookup-result">
+        <div class="result-score compact-result-score">
+            <strong>{{ lookup_result.risk_score }}</strong>
+            <span>{{ lookup_result.verdict }}</span>
+        </div>
+        <div>
+            <h3>{{ lookup_result.ioc_value }}</h3>
+            <p>{{ lookup_result.ioc_type }} &middot; {{ lookup_result.created_at.strftime("%d/%m/%Y %I:%M:%S %p") }}</p>
+            <div class="source-results">
+                {% for result in lookup_result.source_results %}
+                <div><span>{{ result.source }}</span><strong>{{ result.result }}</strong><small>{{ result.score }}/100</small></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="panel mt-3">
+    <div class="section-header">
+        <div>
+            <h2>INTEGRACIONES</h2>
+            <p>Actualiza URL, API key y estado solo cuando lo necesites.</p>
+        </div>
+    </div>
+    <div class="integration-list">
+        {% for config in configs %}
+        <details class="integration-row">
+            <summary>
+                <span class="integration-main">
+                    <i data-lucide="radar"></i>
+                    <span>
+                        <strong>{{ config.display_name }}</strong>
+                        <small>{{ config.notes }}</small>
+                    </span>
+                </span>
+                <span class="integration-meta">
+                    <span class="status-pill {{ 'status-ok' if config.is_enabled else 'status-off' }}">{{ "Activa" if config.is_enabled else "Pausada" }}</span>
+                    <span class="key-state">{{ mask_key(config.api_key) }}</span>
+                    <i data-lucide="chevron-down"></i>
+                </span>
+            </summary>
+            <form class="integration-form" method="post" action="/fuentes/configurar">
+                <input type="hidden" name="source" value="{{ config.source }}">
+                <label>API URL<input name="api_url" value="{{ config.api_url }}" required></label>
+                <label>API Key<input name="api_key" type="password" placeholder="Nueva API key o vacio para mantener"></label>
+                <label class="check-line"><input type="checkbox" name="is_enabled" {% if config.is_enabled %}checked{% endif %}> Integracion habilitada</label>
+                <button type="submit"><i data-lucide="save"></i><span>Guardar</span></button>
+            </form>
+        </details>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

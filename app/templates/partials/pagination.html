@@ -1,0 +1,13 @@
+{% if pagination.pages > 1 %}
+<nav class="pagination-bar" aria-label="Paginacion">
+    {% set base = request.url.path %}
+    {% set q = filters.q if filters.q is defined else "" %}
+    {% set ioc_type = filters.ioc_type if filters.ioc_type is defined else "" %}
+    {% set verdict = filters.verdict if filters.verdict is defined else "" %}
+    {% set level = filters.level if filters.level is defined else "" %}
+    {% set status = filters.status if filters.status is defined else "" %}
+    <a class="{{ 'disabled' if pagination.page <= 1 else '' }}" href="{{ base }}?page={{ pagination.page - 1 }}&q={{ q }}&ioc_type={{ ioc_type }}&verdict={{ verdict }}&level={{ level }}&status={{ status }}">Anterior</a>
+    <span>Pagina {{ pagination.page }} de {{ pagination.pages }}</span>
+    <a class="{{ 'disabled' if pagination.page >= pagination.pages else '' }}" href="{{ base }}?page={{ pagination.page + 1 }}&q={{ q }}&ioc_type={{ ioc_type }}&verdict={{ verdict }}&level={{ level }}&status={{ status }}">Siguiente</a>
+</nav>
+{% endif %}

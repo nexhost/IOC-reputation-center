@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set page_title = "Alertas" %}
+
+{% block content %}
+<div class="alerts-grid">
+    <section class="panel alert-chart-panel">
+        <div class="section-header">
+            <div>
+                <h2>NIVELES DE ALERTA</h2>
+                <p>Resumen de IOC con score mayor a 20.</p>
+            </div>
+        </div>
+        <div class="alert-kpis">
+            {% for level, count in level_counts.items() %}
+            <div class="alert-level-card alert-{{ level|lower }}">
+                <span>{{ level }}</span>
+                <strong>{{ count }}</strong>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="chart-frame alert-chart-frame"><canvas id="alertsChart"></canvas></div>
+    </section>
+
+    <section class="panel alert-table-panel">
+        <div class="section-header">
+            <div>
+                <h2>ALERTAS DE REPUTACION</h2>
+                <p>{{ pagination.total }} alertas encontradas.</p>
+            </div>
+        </div>
+        <form class="filter-bar" method="get" action="/alertas">
+            <input name="q" value="{{ filters.q }}" placeholder="Buscar IOC">
+            <select name="ioc_type">
+                <option value="">Todos los tipos</option>
+                {% for type in ioc_types %}<option value="{{ type }}" {% if filters.ioc_type == type %}selected{% endif %}>{{ type }}</option>{% endfor %}
+            </select>
+            <select name="level">
+                <option value="">Todos los niveles</option>
+                {% for level in levels %}<option value="{{ level }}" {% if filters.level == level %}selected{% endif %}>{{ level }}</option>{% endfor %}
+            </select>
+            <button type="submit"><i data-lucide="filter"></i><span>Filtrar</span></button>
+        </form>
+        <div class="table-responsive">
+            <table class="soc-table">
+                <thead><tr><th>Fecha</th><th>IOC</th><th>Tipo</th><th>Nivel</th><th>Score</th><th>Accion sugerida</th></tr></thead>
+                <tbody>
+                {% for ioc in risky_iocs %}
+                <tr>
+                    <td>{{ ioc.created_at.strftime("%d/%m/%Y %I:%M:%S %p") }}</td>
+                    <td>{{ ioc.ioc_value }}</td>
+                    <td>{{ ioc.ioc_type }}</td>
+                    <td>{{ ioc.verdict }}</td>
+                    <td class="score">{{ ioc.risk_score }}</td>
+                    <td>{{ "Bloquear y abrir caso" if ioc.risk_score >= 61 else "Revisar evidencias y monitorear" }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6">No hay alertas con esos filtros.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "partials/pagination.html" %}
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.IocAlerts = {{ level_counts | tojson }};
+</script>
+<script src="{{ url_for('static', path='js/alerts.js') }}"></script>
+{% endblock %}

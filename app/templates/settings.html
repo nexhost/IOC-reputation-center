@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set page_title = "Configuración" %}
+
+{% block content %}
+<section class="panel">
+    <h2>CONFIGURACIÓN DEL SISTEMA</h2>
+    <div class="settings-grid">
+        <div><span>Aplicación</span><strong>{{ settings.app_name }}</strong></div>
+        <div><span>Entorno</span><strong>{{ settings.app_env }}</strong></div>
+        <div><span>Base de datos</span><strong>{{ settings.database_url }}</strong></div>
+        <div><span>Timeout de consultas</span><strong>{{ settings.request_timeout }} segundos</strong></div>
+        <div><span>Reportes</span><strong>{{ settings.reports_dir }}</strong></div>
+        <div><span>Exportaciones</span><strong>{{ settings.exports_dir }}</strong></div>
+    </div>
+</section>
+{% endblock %}

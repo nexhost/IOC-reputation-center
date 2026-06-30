@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% set page_title = "Casos" %}
+
+{% block content %}
+<div class="case-workspace">
+    <section class="panel">
+        <h2>NUEVO CASO</h2>
+        <form class="stack-form" method="post" action="/casos">
+            <label>Nombre del caso</label>
+            <input name="name" required>
+            <label>Descripcion</label>
+            <textarea name="description" rows="4"></textarea>
+            <label>Estado</label>
+            <select name="status">
+                {% for status in statuses %}<option>{{ status }}</option>{% endfor %}
+            </select>
+            <label>IOC asociado</label>
+            <select name="ioc_id">
+                <option value="">Sin asociar</option>
+                {% for ioc in iocs %}<option value="{{ ioc.id }}">{{ ioc.ioc_value }}</option>{% endfor %}
+            </select>
+            <label>Notas del analista</label>
+            <textarea name="analyst_notes" rows="3"></textarea>
+            <button class="primary-action" type="submit"><i data-lucide="plus"></i><span>Crear caso</span></button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>REGISTRAR IOC MANUAL</h2>
+        <form class="stack-form" method="post" action="/casos/ioc-manual">
+            <label>Caso destino</label>
+            <select name="case_id" required>
+                {% for case in cases %}<option value="{{ case.id }}">{{ case.name }}</option>{% endfor %}
+            </select>
+            <label>IOC</label>
+            <input name="ioc_value" placeholder="IP, dominio, URL o hash" required>
+            <label>Score</label>
+            <input name="risk_score" type="number" min="0" max="100" value="85" required>
+            <label>Resultado</label>
+            <select name="verdict">
+                <option>Malicioso</option><option>Critico</option><option>Alto</option><option>Moderado</option><option>Bajo</option>
+            </select>
+            <label>Evidencia / motivo de auditoria</label>
+            <textarea name="evidence" rows="3" placeholder="Origen, ticket, analisis o evidencia SOC"></textarea>
+            <button class="primary-action" type="submit"><i data-lucide="shield-alert"></i><span>Registrar IOC</span></button>
+        </form>
+    </section>
+
+    <section class="panel cases-main-panel">
+        <div class="section-header">
+            <div>
+                <h2>CASOS Y LINEA DE TIEMPO</h2>
+                <p>Filtra casos y revisa la actividad registrada por IOC.</p>
+            </div>
+        </div>
+        <form class="filter-bar" method="get" action="/casos">
+            <input name="q" value="{{ filters.q }}" placeholder="Buscar caso, descripcion o evidencia">
+            <select name="status">
+                <option value="">Todos los estados</option>
+                {% for status in statuses %}<option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>{% endfor %}
+            </select>
+            <button type="submit"><i data-lucide="filter"></i><span>Filtrar</span></button>
+        </form>
+        <div class="case-list rich-case-list">
+            {% for case in cases %}
+            <article class="case-item case-rich">
+                <div><strong>{{ case.name }}</strong><span>{{ case.status }}</span></div>
+                <p>{{ case.description }}</p>
+                <small>{{ case.created_at.strftime("%d/%m/%Y %I:%M %p") }} · {{ case.ioc_links|length }} IOC asociados</small>
+                <div class="case-ioc-tags">
+                    {% for link in case.ioc_links %}
+                    <span>{{ link.ioc.ioc_type }} · {{ link.ioc.ioc_value }}</span>
+                    {% endfor %}
+                </div>
+                <form class="timeline-note-form" method="post" action="/casos/{{ case.id }}/evento">
+                    <input name="title" placeholder="Agregar evento a la linea de tiempo" required>
+                    <input name="description" placeholder="Detalle breve">
+                    <button type="submit">Agregar</button>
+                </form>
+                <div class="case-timeline">
+                    {% for event in events_by_case.get(case.id, []) %}
+                    <div class="case-timeline-item">
+                        <span></span>
+                        <div>
+                            <strong>{{ event.title }}</strong>
+                            <p>{{ event.description or event.event_type }}</p>
+                            <small>{{ event.created_at.strftime("%d/%m/%Y %I:%M %p") }} · {{ event.analyst }}{% if event.ioc %} · {{ event.ioc.ioc_value }}{% endif %}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="muted">Sin eventos registrados.</p>
+                    {% endfor %}
+                </div>
+            </article>
+            {% else %}
+            <p class="muted">No hay casos con esos filtros.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

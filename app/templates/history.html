@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% set page_title = "Historial de Consultas" %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-header">
+        <div>
+            <h2>HISTORIAL DE CONSULTAS</h2>
+            <p>{{ pagination.total }} registros encontrados.</p>
+        </div>
+    </div>
+    <form class="filter-bar" method="get" action="/historial">
+        <input name="q" value="{{ filters.q }}" placeholder="Buscar IOC">
+        <select name="ioc_type">
+            <option value="">Todos los tipos</option>
+            {% for type in ioc_types %}<option value="{{ type }}" {% if filters.ioc_type == type %}selected{% endif %}>{{ type }}</option>{% endfor %}
+            <option value="Hash" {% if filters.ioc_type == "Hash" %}selected{% endif %}>Hash</option>
+        </select>
+        <select name="verdict">
+            <option value="">Todos los resultados</option>
+            {% for verdict in verdicts %}<option value="{{ verdict }}" {% if filters.verdict == verdict %}selected{% endif %}>{{ verdict }}</option>{% endfor %}
+        </select>
+        <button type="submit"><i data-lucide="filter"></i><span>Filtrar</span></button>
+    </form>
+    <div class="table-responsive">
+        <table class="soc-table">
+            <thead><tr><th>Fecha</th><th>IOC</th><th>Tipo</th><th>Resultado</th><th>Score</th><th>Fuente Principal</th><th>Acciones</th></tr></thead>
+            <tbody>
+            {% for ioc in iocs %}
+            <tr>
+                <td>{{ ioc.created_at.strftime("%d/%m/%Y %I:%M:%S %p") }}</td>
+                <td>{{ ioc.ioc_value }}</td>
+                <td>{{ ioc.ioc_type }}</td>
+                <td>{{ ioc.verdict }}</td>
+                <td>{{ ioc.risk_score }}</td>
+                <td>{{ ioc.results[0].source if ioc.results else "-" }}</td>
+                <td class="compact-actions">
+                    <form method="post" action="/reportes/ioc/{{ ioc.id }}/html"><button type="submit">HTML</button></form>
+                    <form method="post" action="/reportes/ioc/{{ ioc.id }}/pdf"><button type="submit">PDF</button></form>
+                    <form method="post" action="/historial/{{ ioc.id }}/eliminar" onsubmit="return confirm('Eliminar este historial?')"><button class="danger-action" type="submit">Eliminar</button></form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

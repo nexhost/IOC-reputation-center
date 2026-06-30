@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set page_title = "Acerca de" %}
+
+{% block content %}
+<section class="panel about-panel">
+    <div class="brand about-brand">
+        <div class="brand-shield"><i data-lucide="shield-check"></i></div>
+        <div>
+            <div class="brand-title">IOC REPUTATION CENTER</div>
+            <div class="brand-subtitle">Threat Intelligence &amp; IOC Analysis Platform</div>
+        </div>
+    </div>
+    <p>
+        Plataforma defensiva para centralizar consultas de reputacion de indicadores de compromiso,
+        clasificacion de riesgo, historial, casos, alertas e informes para equipos SOC.
+    </p>
+    <div class="about-highlight">
+        <span>Desarrollador principal</span>
+        <strong>Kendry Rosario</strong>
+        <p>Responsable del desarrollo y la vision tecnica del IOC Reputation Center.</p>
+        <p>Contacto: kendry.rosario@gmail.com</p>
+    </div>
+    <div class="settings-grid">
+        <div><span>Version</span><strong>0.1.0</strong></div>
+        <div><span>Stack</span><strong>Python, FastAPI, SQLite, Jinja2, Chart.js</strong></div>
+        <div><span>Objetivo</span><strong>Kali Linux y Ubuntu</strong></div>
+        <div><span>Uso</span><strong>Defensivo y analisis SOC</strong></div>
+    </div>
+    <div class="credits-panel">
+        <span>Creditos</span>
+        <strong>Proyecto grupal | Kendry Rosario | Efre Rodriguez | Alejandro Paniagua | GESTION DE PROYECTOS DE SEGURIDAD</strong>
+    </div>
+    <div class="manuals-panel">
+        <div class="section-header">
+            <div>
+                <h2>MANUALES Y DOCUMENTOS</h2>
+                <p>Documentacion lista para usuarios que instalen la herramienta en Linux.</p>
+            </div>
+        </div>
+        <div class="manual-grid">
+            {% for slug, doc in documents.items() %}
+            <article class="manual-card">
+                <i data-lucide="file-down"></i>
+                <div>
+                    <strong>{{ doc.title }}</strong>
+                    <small>{{ doc.filename }}</small>
+                </div>
+                <a href="/acerca-de/documentos/{{ slug }}" target="_blank">Ver PDF</a>
+                <a href="/acerca-de/documentos/{{ slug }}" download>Descargar</a>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% set page_title = "Reportes" %}
+
+{% block content %}
+<section class="panel report-hero">
+    <div>
+        <div class="brand report-brand">
+            <div class="brand-shield"><i data-lucide="shield-check"></i></div>
+            <div>
+                <div class="brand-title">IOC REPUTATION CENTER</div>
+                <div class="brand-subtitle">Threat Intelligence &amp; Analysis</div>
+            </div>
+        </div>
+        <p>Genere informes ejecutivos con score, evidencias por fuente, graficos y recomendaciones para investigacion SOC.</p>
+    </div>
+    <div class="report-format-badges">
+        <span>HTML</span><span>PDF</span><span>JSON</span><span>CSV</span>
+    </div>
+</section>
+
+<div class="two-column mt-3">
+    <section class="panel">
+        <h2>GENERAR REPORTE</h2>
+        <div class="report-actions">
+            {% for ioc in iocs %}
+            <div class="report-row report-row-rich">
+                <div>
+                    <strong>{{ ioc.ioc_value }}</strong>
+                    <small>{{ ioc.ioc_type }} · {{ ioc.verdict }} · Score {{ ioc.risk_score }}/100</small>
+                </div>
+                <div>
+                    <form method="post" action="/reportes/ioc/{{ ioc.id }}/html"><button type="submit">HTML</button></form>
+                    <form method="post" action="/reportes/ioc/{{ ioc.id }}/pdf"><button type="submit">PDF</button></form>
+                    <form method="post" action="/reportes/ioc/{{ ioc.id }}/json"><button type="submit">JSON</button></form>
+                    <form method="post" action="/reportes/ioc/{{ ioc.id }}/csv"><button type="submit">CSV</button></form>
+                </div>
+            </div>
+            {% else %}
+            <p class="muted">No hay IOC consultados para generar reportes.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>REPORTES GENERADOS</h2>
+        <div class="case-list">
+            {% for item in report_items %}
+            <article class="case-item">
+                <div>
+                    <strong>{{ item.filename }}</strong>
+                    <span>{{ item.report.created_at.strftime("%d/%m/%Y %H:%M") }}</span>
+                </div>
+                <a class="download-link" href="/reportes/descargar/{{ item.report.id }}">Descargar</a>
+            </article>
+            {% else %}
+            <p class="muted">No hay reportes generados.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

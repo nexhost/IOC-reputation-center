@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% set page_title = "Usuarios" %}
+
+{% block content %}
+<div class="users-layout">
+    <section class="panel user-create-panel">
+        <h2>CREAR USUARIO</h2>
+        {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+        {% if request.state.user.role != "Administrador" %}
+        <p class="muted">Solo el rol Administrador puede crear o modificar usuarios.</p>
+        {% endif %}
+        <form class="stack-form" method="post" action="/usuarios">
+            <label>Nombre</label>
+            <input name="name" required {% if request.state.user.role != "Administrador" %}disabled{% endif %}>
+            <label>Correo</label>
+            <input type="email" name="email" required {% if request.state.user.role != "Administrador" %}disabled{% endif %}>
+            <label>Rol</label>
+            <select name="role" {% if request.state.user.role != "Administrador" %}disabled{% endif %}>
+                {% for role in roles %}<option>{{ role }}</option>{% endfor %}
+            </select>
+            <label>Contrasena temporal</label>
+            <input type="password" name="password" minlength="6" required {% if request.state.user.role != "Administrador" %}disabled{% endif %}>
+            <label class="check-line"><input type="checkbox" name="is_active" checked {% if request.state.user.role != "Administrador" %}disabled{% endif %}> Usuario activo</label>
+            <button class="primary-action" type="submit" {% if request.state.user.role != "Administrador" %}disabled{% endif %}>
+                <i data-lucide="user-plus"></i><span>Crear usuario</span>
+            </button>
+        </form>
+    </section>
+
+    <section class="panel user-directory-panel">
+        <div class="section-header">
+            <div>
+                <h2>EDITAR USUARIOS Y ROLES</h2>
+                <p>Administra perfiles, estado y contrasenas desde una vista compacta.</p>
+            </div>
+        </div>
+        <div class="user-directory">
+            {% for user in users %}
+            <details class="user-card-friendly">
+                <summary>
+                    <span class="user-avatar-mini">{{ user.name[:1] }}</span>
+                    <span class="user-summary-main">
+                        <strong>{{ user.name }}</strong>
+                        <small>{{ user.email }}</small>
+                    </span>
+                    <span class="role-pill">{{ user.role }}</span>
+                    <span class="status-pill {{ 'status-ok' if user.is_active else 'status-off' }}">{{ "Activo" if user.is_active else "Inactivo" }}</span>
+                    <span class="last-login">Ultimo acceso: {{ user.last_login.strftime("%d/%m/%Y %I:%M %p") if user.last_login else "-" }}</span>
+                    <i data-lucide="chevron-down"></i>
+                </summary>
+                <div class="user-edit-body">
+                    <form method="post" action="/usuarios/{{ user.id }}/editar" class="friendly-edit-form">
+                        <label>Nombre<input name="name" value="{{ user.name }}" required {% if request.state.user.role != "Administrador" %}disabled{% endif %}></label>
+                        <label>Correo<input type="email" name="email" value="{{ user.email }}" required {% if request.state.user.role != "Administrador" %}disabled{% endif %}></label>
+                        <label>Rol
+                            <select name="role" {% if request.state.user.role != "Administrador" %}disabled{% endif %}>
+                                {% for role in roles %}<option {% if user.role == role %}selected{% endif %}>{{ role }}</option>{% endfor %}
+                            </select>
+                        </label>
+                        <label class="check-line"><input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %} {% if request.state.user.role != "Administrador" %}disabled{% endif %}> Cuenta activa</label>
+                        <button type="submit" {% if request.state.user.role != "Administrador" %}disabled{% endif %}>Guardar cambios</button>
+                    </form>
+                    {% if request.state.user.role == "Administrador" %}
+                    <form class="password-reset-line" method="post" action="/usuarios/{{ user.id }}/password">
+                        <input name="password" type="password" placeholder="Nueva contrasena" minlength="6" required>
+                        <button type="submit">Actualizar clave</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+fastapi==0.137.1
+uvicorn
+jinja2
+sqlalchemy
+pydantic
+pydantic-settings
+itsdangerous
+python-dotenv
+requests
+httpx
+pandas
+python-multipart
+aiofiles
+reportlab
+weasyprint

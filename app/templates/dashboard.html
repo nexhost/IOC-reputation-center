@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% set page_title = "Dashboard" %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <section class="panel quick-panel">
+        <div class="panel-title">
+            <h2>CONSULTA RÁPIDA DE IOC</h2>
+            <i data-lucide="circle-help"></i>
+        </div>
+        <form class="quick-search" method="post" action="/consulta">
+            <input name="ioc_value" placeholder="Ingrese IP, Dominio, URL o Hash (MD5, SHA1, SHA256)..." required>
+            <button type="submit"><i data-lucide="search"></i><span>Buscar</span></button>
+        </form>
+        <p class="examples">
+            Ejemplos: 8.8.8.8&nbsp;&nbsp;|&nbsp;&nbsp;malware-domain.com&nbsp;&nbsp;|&nbsp;&nbsp;https://malicious.com/payload.exe&nbsp;&nbsp;|&nbsp;&nbsp;44d88612fea8a8f36de82e1278abb02f
+        </p>
+    </section>
+
+    <section class="panel risk-panel">
+        <h2>NIVEL DE RIESGO</h2>
+        <div class="risk-gauge" style="--score: {{ last_ioc.risk_score if last_ioc else 78 }}">
+            <div class="gauge-cover">
+                <strong>{{ last_ioc.risk_score if last_ioc else 78 }}</strong>
+                <span>{{ last_ioc.verdict if last_ioc else "Alto" }}</span>
+            </div>
+        </div>
+        <small>Última consulta</small>
+    </section>
+
+    <section class="panel last-panel">
+        <h2>ÚLTIMA CONSULTA</h2>
+        {% if last_ioc %}
+        <dl>
+            <dt>IOC Consultado</dt><dd>{{ last_ioc.ioc_value }}</dd>
+            <dt>Tipo</dt><dd>{{ last_ioc.ioc_type }}</dd>
+            <dt>Fecha</dt><dd>{{ last_ioc.created_at.strftime("%d/%m/%Y %H:%M:%S") }}</dd>
+            <dt>Resultado</dt><dd class="text-danger-soft">{{ last_ioc.verdict }}</dd>
+            <dt>Score</dt><dd>{{ last_ioc.risk_score }}/100</dd>
+        </dl>
+        {% else %}
+        <p class="muted">Sin consultas registradas.</p>
+        {% endif %}
+    </section>
+
+    <section class="kpi-card kpi-total">
+        <div class="kpi-icon"><i data-lucide="file-search"></i></div>
+        <div><strong>{{ "{:,}".format(total_iocs) }}</strong><span>IOC Consultados</span><small>Total en el sistema</small></div>
+    </section>
+    <section class="kpi-card kpi-bad">
+        <div class="kpi-icon"><i data-lucide="shield-alert"></i></div>
+        <div><strong>{{ malicious_iocs }}</strong><span>Maliciosos</span><small>{{ "%.2f"|format((malicious_iocs / total_iocs * 100) if total_iocs else 0) }}% del total</small></div>
+    </section>
+    <section class="kpi-card kpi-warn">
+        <div class="kpi-icon"><i data-lucide="triangle-alert"></i></div>
+        <div><strong>{{ suspicious_iocs }}</strong><span>Sospechosos</span><small>{{ "%.2f"|format((suspicious_iocs / total_iocs * 100) if total_iocs else 0) }}% del total</small></div>
+    </section>
+    <section class="kpi-card kpi-good">
+        <div class="kpi-icon"><i data-lucide="circle-check"></i></div>
+        <div><strong>{{ clean_iocs }}</strong><span>Limpios</span><small>{{ "%.2f"|format((clean_iocs / total_iocs * 100) if total_iocs else 0) }}% del total</small></div>
+    </section>
+    <section class="kpi-card kpi-case">
+        <div class="kpi-icon"><i data-lucide="folder"></i></div>
+        <div><strong>{{ active_cases }}</strong><span>Casos Activos</span><small>En investigación</small></div>
+    </section>
+
+    <section class="panel donut-panel">
+        <h2>IOC POR NIVEL DE RIESGO</h2>
+        <div class="chart-split">
+            <div class="chart-frame"><canvas id="severityChart"></canvas></div>
+            <div class="legend-list">
+                {% for label, value in severity_counts.items() %}
+                <div><span class="legend-dot dot-{{ loop.index }}"></span><span>{{ label }}</span><small>{{ value }}</small></div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="panel bar-panel">
+        <h2>IOC POR TIPO</h2>
+        <div class="chart-frame chart-frame-bar"><canvas id="typeChart"></canvas></div>
+    </section>
+
+    <section class="panel map-panel">
+        <h2>TOP 5 PAÍSES (IPs MALICIOSAS)</h2>
+        <div class="map-layout">
+            <div class="country-list">
+                {% for country in top_countries %}
+                <div><span style="background: {{ country.color }}"></span>{{ country.name }}<strong>{{ country.value }}%</strong></div>
+                {% endfor %}
+            </div>
+            <div class="map-box globe-box">
+                <div class="globe-scene" aria-label="Mapa mundi animado de actividad maliciosa">
+                    <div class="globe">
+                        <div class="globe-map"></div>
+                        <span class="threat-dot dot-russia"></span>
+                        <span class="threat-dot dot-us"></span>
+                        <span class="threat-dot dot-china"></span>
+                        <span class="threat-dot dot-eu"></span>
+                    </div>
+                    <div class="globe-orbit"></div>
+                </div>
+                <div class="risk-scale"><span>Bajo</span><b></b><span>Alto</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel table-panel">
+        <h2>ÚLTIMAS CONSULTAS</h2>
+        <div class="table-responsive">
+            <table class="soc-table">
+                <thead><tr><th>Fecha</th><th>IOC</th><th>Tipo</th><th>Resultado</th><th>Score</th><th>Fuente Principal</th><th>Caso</th><th>Analista</th></tr></thead>
+                <tbody>
+                {% for ioc in latest_iocs %}
+                <tr>
+                    <td>{{ ioc.created_at.strftime("%d/%m/%Y %H:%M:%S") }}</td>
+                    <td>{{ ioc.ioc_value }}</td>
+                    <td>{{ ioc.ioc_type }}</td>
+                    <td class="verdict verdict-{{ ioc.verdict|lower }}">{{ ioc.verdict }}</td>
+                    <td class="score">{{ ioc.risk_score }}</td>
+                    <td>{{ ioc.results[0].source if ioc.results else "-" }}</td>
+                    <td>{{ "Caso #" ~ (20 + loop.index) if ioc.risk_score >= 41 else "-" }}</td>
+                    <td>Analista SOC</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel activity-panel">
+        <h2>ACTIVIDAD RECIENTE</h2>
+        <div class="timeline">
+            {% for activity in activities %}
+            <div class="timeline-item">
+                <span></span>
+                <div><strong>{{ activity.title }}</strong><p>{{ activity.detail }}</p></div>
+                <small>{{ activity.time }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.IocDashboard = {
+    severity: {{ severity_counts | tojson }},
+    types: {{ type_counts | tojson }}
+};
+</script>
+<script src="{{ url_for('static', path='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% set page_title = "Consulta IOC" %}
+
+{% block content %}
+<div class="two-column">
+    <section class="panel">
+        <h2>CONSULTA IOC</h2>
+        {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+        <form class="stack-form" method="post" action="/consulta">
+            <label>Indicador</label>
+            <input name="ioc_value" placeholder="IP, dominio, URL, MD5, SHA1 o SHA256" required>
+            <label>Analista</label>
+            <input name="analyst" value="{{ request.state.user.name if request.state.user else 'Analista SOC' }}">
+            <button class="primary-action" type="submit"><i data-lucide="search"></i><span>Consultar reputacion</span></button>
+        </form>
+    </section>
+
+    <section class="panel result-panel">
+        <h2>RESULTADO</h2>
+        {% if result %}
+        <div class="result-insight">
+            <div class="result-score">
+                <strong>{{ result.risk_score }}</strong>
+                <span>{{ result.verdict }}</span>
+            </div>
+            <div class="result-summary">
+                <h3>{{ result.ioc_value }}</h3>
+                <p>{{ result.ioc_type }} &middot; {{ result.created_at.strftime("%d/%m/%Y %I:%M:%S %p") }}</p>
+                <div class="mini-kpi-row">
+                    <span>Fuentes: <strong>{{ result.results|length }}</strong></span>
+                    <span>Hallazgos: <strong>{{ result.results|selectattr("score", "ge", 21)|list|length }}</strong></span>
+                    <span>Score: <strong>{{ result.risk_score }}/100</strong></span>
+                </div>
+            </div>
+        </div>
+        <div class="source-results">
+            {% for source in result.results %}
+            <div><span>{{ source.source }}</span><strong>{{ source.result }}</strong><small>{{ source.score }}/100</small></div>
+            {% endfor %}
+        </div>
+        <div class="recommendation-box">
+            <strong>Accion sugerida</strong>
+            <p>
+                {% if result.risk_score >= 81 %}Bloquear inmediatamente, abrir caso y correlacionar con SIEM/EDR.
+                {% elif result.risk_score >= 61 %}Bloquear preventivamente y validar alcance interno.
+                {% elif result.risk_score >= 41 %}Mantener bajo observacion y revisar evidencias por fuente.
+                {% elif result.risk_score >= 21 %}Correlacionar con eventos recientes y reconsultar si hay recurrencia.
+                {% else %}Sin accion inmediata; conservar registro historico para auditoria.{% endif %}
+            </p>
+        </div>
+        <div class="action-row">
+            <form method="post" action="/ioc/{{ result.id }}/case"><button type="submit">Crear caso</button></form>
+            <form method="post" action="/reportes/ioc/{{ result.id }}/html"><button type="submit">Reporte HTML</button></form>
+            <form method="post" action="/reportes/ioc/{{ result.id }}/pdf"><button type="submit">Reporte PDF</button></form>
+        </div>
+        {% else %}
+        <p class="muted">Ingrese un IOC para consultar las fuentes configuradas. El resultado mostrara score, evidencias por fuente y accion sugerida.</p>
+        {% endif %}
+    </section>
+</div>
+
+<section class="panel mt-3">
+    <div class="section-header">
+        <div>
+            <h2>HISTORIAL RECIENTE</h2>
+            <p>{{ pagination.total }} registros encontrados.</p>
+        </div>
+    </div>
+    <form class="filter-bar" method="get" action="/consulta">
+        <input name="q" value="{{ filters.q }}" placeholder="Buscar IOC">
+        <select name="ioc_type">
+            <option value="">Todos los tipos</option>
+            {% for type in ioc_types %}<option value="{{ type }}" {% if filters.ioc_type == type %}selected{% endif %}>{{ type }}</option>{% endfor %}
+            <option value="Hash" {% if filters.ioc_type == "Hash" %}selected{% endif %}>Hash</option>
+        </select>
+        <button type="submit"><i data-lucide="filter"></i><span>Filtrar</span></button>
+    </form>
+    <div class="table-responsive">
+        <table class="soc-table">
+            <thead><tr><th>Fecha</th><th>IOC</th><th>Tipo</th><th>Resultado</th><th>Score</th></tr></thead>
+            <tbody>
+            {% for ioc in latest_iocs %}
+            <tr><td>{{ ioc.created_at.strftime("%d/%m/%Y %I:%M:%S %p") }}</td><td>{{ ioc.ioc_value }}</td><td>{{ ioc.ioc_type }}</td><td>{{ ioc.verdict }}</td><td>{{ ioc.risk_score }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

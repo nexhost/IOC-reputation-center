@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set page_title = "Herramienta" %}
+
+{% block content %}
+<section class="panel tools-hero">
+    <div>
+        <h2>HERRAMIENTAS DE VERIFICACION</h2>
+        <p>Consultas defensivas rapidas para usuarios que instalan IOC Reputation Center.</p>
+    </div>
+    <span class="soft-badge">CSIRT / SOC Ready</span>
+</section>
+
+{% if error %}<div class="alert alert-danger mt-3">{{ error }}</div>{% endif %}
+
+<div class="tools-grid mt-3">
+    <article class="tool-card">
+        <div class="tool-card-head"><i data-lucide="mail-warning"></i><h3>Verificar cuenta comprometida</h3></div>
+        <p>Revise si un correo o numero telefonico requiere acciones preventivas por posible exposicion.</p>
+        <form method="post" action="/herramientas/cuenta">
+            <input name="account" placeholder="correo@dominio.com o +1 809..." required>
+            <button type="submit">Verificar</button>
+        </form>
+    </article>
+
+    <article class="tool-card">
+        <div class="tool-card-head"><i data-lucide="key-round"></i><h3>Verificacion de contrasena comprometida</h3></div>
+        <p>Consulta segura k-anonymity contra filtraciones publicas sin enviar la contrasena completa.</p>
+        <form method="post" action="/herramientas/password">
+            <input name="password" type="password" placeholder="Contrasena a verificar" required>
+            <button type="submit">Analizar</button>
+        </form>
+    </article>
+
+    <article class="tool-card">
+        <div class="tool-card-head"><i data-lucide="server-crash"></i><h3>Verificacion de IP comprometida</h3></div>
+        <p>Consulta una IP contra las fuentes de inteligencia configuradas en el sistema.</p>
+        <form method="post" action="/herramientas/ip">
+            <input name="ip_value" placeholder="8.8.8.8" required>
+            <button type="submit">Consultar IP</button>
+        </form>
+    </article>
+
+    <article class="tool-card">
+        <div class="tool-card-head"><i data-lucide="link-2-off"></i><h3>Verificacion de enlace malicioso</h3></div>
+        <p>Analiza un URL sospechoso con el motor IOC y las integraciones activas.</p>
+        <form method="post" action="/herramientas/enlace">
+            <input name="url_value" placeholder="https://dominio.tld/ruta" required>
+            <button type="submit">Analizar enlace</button>
+        </form>
+    </article>
+</div>
+
+{% if result %}
+<section class="panel tool-result-panel mt-3">
+    <div class="result-insight">
+        <div class="result-score">
+            <strong>{{ result.score }}</strong>
+            <span>{{ result.status }}</span>
+        </div>
+        <div class="result-summary">
+            <h3>{{ result.title }}</h3>
+            <p>{{ result.summary }}</p>
+            <div class="tool-detail-list">
+                {% for detail in result.details %}
+                <div><i data-lucide="check-circle-2"></i><span>{{ detail }}</span></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
