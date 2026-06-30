@@ -4,9 +4,35 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app import models
+from app.config import get_settings
 from app.services.intelligence_service import IOC_LOOKUP_SOURCES
 from app.services.risk_engine import dashboard_bucket
 from app.services.source_config_service import list_source_configs
+
+
+def get_source_health(db: Session) -> list[dict]:
+    settings = get_settings()
+    configs = {config.source: config for config in list_source_configs(db)}
+    env_keys = {
+        "AbuseIPDB": settings.abuseipdb_api_key,
+        "VirusTotal": settings.virustotal_api_key,
+    }
+    source_health = []
+    for source in IOC_LOOKUP_SOURCES:
+        config = configs.get(source)
+        enabled = config.is_enabled if config else True
+        requires_key = source in env_keys
+        has_key = bool((config and config.api_key) or env_keys.get(source))
+        online = enabled and (not requires_key or has_key)
+        source_health.append(
+            {
+                "name": source,
+                "online": online,
+                "requires_key": requires_key,
+                "has_key": has_key,
+            }
+        )
+    return source_health
 
 
 def get_dashboard_context(db: Session) -> dict:
@@ -28,16 +54,6 @@ def get_dashboard_context(db: Session) -> dict:
     }
     last_ioc = iocs[0] if iocs else None
 
-    configs = {config.source: config for config in list_source_configs(db)}
-    source_health = []
-    for source in IOC_LOOKUP_SOURCES:
-        config = configs.get(source)
-        enabled = config.is_enabled if config else True
-        requires_key = source in {"AbuseIPDB", "VirusTotal"}
-        has_key = bool(config and config.api_key)
-        online = enabled and (not requires_key or has_key)
-        source_health.append({"name": source, "online": online, "requires_key": requires_key, "has_key": has_key})
-
     return {
         "total_iocs": len(iocs),
         "malicious_iocs": buckets["Malicioso"],
@@ -46,7 +62,7 @@ def get_dashboard_context(db: Session) -> dict:
         "active_cases": cases_active,
         "last_ioc": last_ioc,
         "latest_iocs": iocs[:8],
-        "source_health": source_health,
+        "source_health": get_source_health(db),
         "type_counts": {
             "IP": type_counts["IP"],
             "Dominio": type_counts["Dominio"],

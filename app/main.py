@@ -11,6 +11,7 @@ from app import models
 from app.config import get_settings
 from app.database import SessionLocal, ensure_schema, init_db
 from app.routers import auth, cases, dashboard, ioc, reports, system, tools, users
+from app.services.dashboard_service import get_source_health
 from app.services.seed import seed_initial_data
 
 
@@ -42,6 +43,7 @@ for router in (
 async def authentication_guard(request: Request, call_next):
     public_paths = ("/login", "/static", "/health", "/docs", "/redoc", "/openapi.json")
     request.state.user = None
+    request.state.source_health = None
     if request.url.path.startswith(public_paths):
         return await call_next(request)
 
@@ -57,6 +59,7 @@ async def authentication_guard(request: Request, call_next):
             request.session.clear()
             return RedirectResponse(url="/login", status_code=303)
         request.state.user = user
+        request.state.source_health = get_source_health(db)
         return await call_next(request)
     finally:
         db.close()

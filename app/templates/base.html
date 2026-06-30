@@ -56,12 +56,12 @@
 
         <section class="source-panel">
             <h3>Fuentes Integradas</h3>
-            {% set sources = source_health if source_health is defined else [
+            {% set request_sources = request.state.source_health if request.state.source_health is defined else none %}
+            {% set sources = source_health if source_health is defined else request_sources if request_sources else [
                 {"name": "ThreatFox", "online": true},
                 {"name": "URLHaus", "online": true},
                 {"name": "AbuseIPDB", "online": false},
-                {"name": "VirusTotal", "online": false},
-                {"name": "AlienVault OTX", "online": false}
+                {"name": "VirusTotal", "online": false}
             ] %}
             {% for source in sources %}
             <div class="source-row">
